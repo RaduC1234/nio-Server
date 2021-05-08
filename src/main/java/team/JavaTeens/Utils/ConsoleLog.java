@@ -19,7 +19,7 @@ public class ConsoleLog {
     }  
     public static void fatalError(String message){
         System.err.println(getDate() + getThread("FATAL") + ": " +  message);
-        System.exit(0);
+        System.exit(1);
     }
     private static String getDate(){
 

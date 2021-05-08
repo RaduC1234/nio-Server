@@ -2,61 +2,178 @@ package team.JavaTeens.Server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import team.JavaTeens.ServerCommand.CommandHandler;
+import team.JavaTeens.ServerCommand.HelpCommand;
+import team.JavaTeens.ServerCommand.SayCommand;
 import team.JavaTeens.Utils.ConsoleLog;
 
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-public class ServerInstance {
+public class ServerInstance implements Runnable {
 
-    private ConfigValue config;
+    private String databasePath;
+    private int port;
+    private ServerSocketChannel ssc;
+    private Selector selector;
+    private List<ClientConnection> clients; // a list of all clients connected
 
     public ServerInstance() {
-
-    }
-    public void run(){
-
-        ServerSocket serverSocket = null;
         ConsoleLog.info("Server Starting...");
-
-        this.config = readConfigFile("Config.json"); //TODO: replace so it can be modified in the args.
-
         try {
-            serverSocket = new ServerSocket(this.config.port);
-            ConsoleLog.info("Starting Server on port: " + this.config.port);
+            ConfigValue config = readConfigFile("Config.json");
+            this.databasePath = config.dataBasePath;
+            this.port = config.port;
+
+            start();
+
+            CommandHandler handler = new CommandHandler()
+                    .addCommand(new HelpCommand())
+                    .addCommand(new SayCommand(this))
+                    .listen();
+
         } catch (IOException e) {
             e.printStackTrace();
-            ConsoleLog.fatalError("Cannot assign a port to the server");
+            ConsoleLog.fatalError("Fatal Error:" + e.getMessage());
         }
-/*        Socket socket = serverSocket.accept();
-        System.out.println("Accept Connection");
+    }
 
-        // to send data to the client
-        PrintStream printStream = new PrintStream(socket.getOutputStream());
+    public void start() throws IOException {
 
-        // to read data coming from the client
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));*/
-        // to read data from the keyboard
-        BufferedReader bufferedReader1 = new BufferedReader(new InputStreamReader(System.in));
+        this.ssc = ServerSocketChannel.open();
+        this.ssc.socket().bind(new InetSocketAddress(port));
+        this.ssc.configureBlocking(false);
+        this.selector = Selector.open();
 
-        ConsoleLog.info("Server finished loading");
-        // server executes continuously
-        while (true) {
+        this.ssc.register(selector, SelectionKey.OP_ACCEPT);
+    }
 
+    @Override
+    public void run() {
+        ConsoleLog.info("Starting Server on port: " + this.port + ".");
+
+        clients = new ArrayList<>();
+
+        Iterator<SelectionKey> it;
+        while (ssc.isOpen()) {
             try {
-                Socket clientSocket = serverSocket.accept();
-                new ClientConnection(clientSocket, this.config.dataBasePath).start();
-
+                if (selector.select() != 0) {
+                    it = selector.selectedKeys().iterator();
+                    while (it.hasNext()) {
+                        SelectionKey key = it.next();
+                        handleClientConnection(key);
+                        it.remove();
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            catch (NullPointerException nullPointerException){
-                ConsoleLog.error(nullPointerException.getMessage());
-            }
-        } // end of while
+        }
     }
-    private ConfigValue readConfigFile(String filePath) {
+
+    private void handleClientConnection(SelectionKey key) throws IOException {
+
+        // here we handle connection requests
+        if (key.isAcceptable()) {
+
+            ClientConnection channelClient = new ClientConnection(ssc.accept());
+
+            channelClient.getChannel().configureBlocking(false);
+            channelClient.getChannel().register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+
+            ConsoleLog.info("New Connection from " + channelClient.getGuestName());
+            clients.add(channelClient);
+
+        }  //here we handle client requests
+        else if (key.isReadable()) {
+            handleRequests(key);
+        } // here we send client requests
+        else if (key.isWritable()) {
+            sendRequests(key);
+        }
+    }
+
+    private void handleRequests(SelectionKey key) throws IOException {
+        ClientConnection clientConnection = returnClientConnection(key);
+        SocketChannel channelClient;
+
+        try{
+            channelClient = clientConnection.getChannel();
+        }
+        catch (NullPointerException e){
+            return;
+        }
+
+        if (!channelClient.isOpen()) {
+            ConsoleLog.info("Channel terminated by client");
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(80);
+        buffer.clear();
+
+        try {
+            channelClient.read(buffer);
+        }
+        catch (SocketException e){
+            // here we handle client disconnection
+            disconnect(clientConnection, e.getMessage());
+            clients.remove(clientConnection);
+        }
+
+        //here starts the server request handler
+        if(clientConnection.isAuthenticated()){
+            //we want to handle requests only from authenticated users
+            //TODO : continue from here
+
+        }
+        else {
+            //here we handle unauthenticated users
+            System.out.printf("Client says: %s\n", new String(buffer.array()));
+            //TODO: Create an authentication protocol
+        }
+
+    }
+    private void sendRequests(SelectionKey key) throws IOException {
+
+    }
+    private ClientConnection returnClientConnection(SelectionKey key){
+
+        for(ClientConnection forConnection : clients){
+            if(forConnection.getChannel().equals(key.channel())){
+                return forConnection;
+            }
+        }
+        return null;
+    }
+    private void disconnect(ClientConnection connection, String reason) throws IOException{
+        ConsoleLog.info("Client " + connection.getGuestName() +  " has disconnected. (" + reason + ")");
+        connection.getChannel().close();
+    }
+
+    public List<ClientConnection> returnClientsList(){
+        return this.clients;
+    }
+
+    private static class ConfigValue {
+
+        private final String dataBasePath;
+        private final int port;
+
+        public ConfigValue(String dataBasePath, int port) {
+            this.dataBasePath = dataBasePath;
+            this.port = port;
+        }
+    }
+    private static ConfigValue readConfigFile(String filePath) {
         ObjectMapper configMapper = new ObjectMapper();
         JsonNode node = null;
         try {
@@ -68,15 +185,5 @@ public class ServerInstance {
         }
 
         return new ConfigValue(node.get("external").textValue(), node.get("port").asInt());
-    }
-    private static class ConfigValue {
-
-        private final String dataBasePath;
-        private final int port;
-
-        public ConfigValue(String dataBasePath, int port) {
-            this.dataBasePath = dataBasePath;
-            this.port = port;
-        }
     }
 }

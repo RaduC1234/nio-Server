@@ -1,4 +1,4 @@
-package team.JavaTeens.Server;
+package team.JavaTeens.Account;
 
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;

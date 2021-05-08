@@ -3,7 +3,7 @@ package team.JavaTeens.Serializer_Deserializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import team.JavaTeens.Server.EventDay;
+import team.JavaTeens.Account.EventDay;
 
 import java.io.IOException;
 

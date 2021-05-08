@@ -1,4 +1,4 @@
-package team.JavaTeens.Server;
+package team.JavaTeens.Account;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
