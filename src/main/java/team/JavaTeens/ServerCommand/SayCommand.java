@@ -6,7 +6,6 @@ import team.JavaTeens.Utils.ConsoleLog;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 public class SayCommand extends Command {
@@ -49,7 +48,7 @@ public class SayCommand extends Command {
             }
         }
         /*
-        TODO: add ability to select a user to send a message
+        //TODO: add ability to select a user to send a message
         boolean clientFound = false;
 
         for(ClientConnection connection : clients){

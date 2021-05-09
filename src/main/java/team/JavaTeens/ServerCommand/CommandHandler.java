@@ -47,6 +47,9 @@ public class CommandHandler {
         });
         return null;
     }
+    public void terminate(){
+        service.shutdownNow();
+    }
 
     private static class ConsoleInput {
 

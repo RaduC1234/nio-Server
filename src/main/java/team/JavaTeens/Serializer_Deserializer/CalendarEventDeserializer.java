@@ -4,30 +4,30 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import team.JavaTeens.Account.EventDay;
+import team.JavaTeens.Account.CalendarEvent;
 
 import java.io.IOException;
 import java.time.LocalDate;
 
-public class EventDayDeserializer extends StdDeserializer<EventDay> {
+public class CalendarEventDeserializer extends StdDeserializer<CalendarEvent> {
 
-    public EventDayDeserializer(){
+    public CalendarEventDeserializer(){
         this(null);
     }
-    public EventDayDeserializer(Class<EventDay> t){
+    public CalendarEventDeserializer(Class<CalendarEvent> t){
         super(t);
     }
 
     @Override
-    public EventDay deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+    public CalendarEvent deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
 
         int year = (Integer) node.get("year").numberValue();
         int mouth = (Integer) node.get("mouth").numberValue();
         int day = (Integer) node.get("day").numberValue();
 
-        String reason = node.get("reason").asText();
+        String description = node.get("description").asText();
 
-        return new EventDay(LocalDate.of(year,mouth,day), reason);
+        return new CalendarEvent(LocalDate.of(year,mouth,day), description);
     }
 }

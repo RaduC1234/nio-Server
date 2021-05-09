@@ -2,6 +2,7 @@ package team.JavaTeens.Server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import team.JavaTeens.ClientRequest.Requests;
 import team.JavaTeens.ServerCommand.CommandHandler;
 import team.JavaTeens.ServerCommand.HelpCommand;
 import team.JavaTeens.ServerCommand.SayCommand;
@@ -19,25 +20,35 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ServerInstance implements Runnable {
 
-    private String databasePath;
-    private int port;
+    private ConfigFile config;
     private ServerSocketChannel ssc;
     private Selector selector;
     private List<ClientConnection> clients; // a list of all clients connected
+    private ExecutorService executors;
+    private CommandHandler handler;
 
     public ServerInstance() {
         ConsoleLog.info("Server Starting...");
         try {
-            ConfigValue config = readConfigFile("Config.json");
-            this.databasePath = config.dataBasePath;
-            this.port = config.port;
 
-            start();
+            this.config = readConfigFile("Config.json");
+            this.executors = Executors.newFixedThreadPool(3);
 
-            CommandHandler handler = new CommandHandler()
+            //start
+            this.ssc = ServerSocketChannel.open();
+            this.ssc.socket().bind(new InetSocketAddress(this.config.port));
+            this.ssc.configureBlocking(false);
+            this.selector = Selector.open();
+
+            this.ssc.register(selector, SelectionKey.OP_ACCEPT);
+
+            //register new commands here
+            this.handler = new CommandHandler()
                     .addCommand(new HelpCommand())
                     .addCommand(new SayCommand(this))
                     .listen();
@@ -47,20 +58,9 @@ public class ServerInstance implements Runnable {
             ConsoleLog.fatalError("Fatal Error:" + e.getMessage());
         }
     }
-
-    public void start() throws IOException {
-
-        this.ssc = ServerSocketChannel.open();
-        this.ssc.socket().bind(new InetSocketAddress(port));
-        this.ssc.configureBlocking(false);
-        this.selector = Selector.open();
-
-        this.ssc.register(selector, SelectionKey.OP_ACCEPT);
-    }
-
     @Override
     public void run() {
-        ConsoleLog.info("Starting Server on port: " + this.port + ".");
+        ConsoleLog.info("Starting Server on port: " + this.config.port + ".");
 
         clients = new ArrayList<>();
 
@@ -80,7 +80,6 @@ public class ServerInstance implements Runnable {
             }
         }
     }
-
     private void handleClientConnection(SelectionKey key) throws IOException {
 
         // here we handle connection requests
@@ -94,16 +93,17 @@ public class ServerInstance implements Runnable {
             ConsoleLog.info("New Connection from " + channelClient.getGuestName());
             clients.add(channelClient);
 
+
+
         }  //here we handle client requests
         else if (key.isReadable()) {
-            handleRequests(key);
+            handleIncomingBytes(key);
         } // here we send client requests
         else if (key.isWritable()) {
-            sendRequests(key);
+            handleOutcomingBytes(key);
         }
     }
-
-    private void handleRequests(SelectionKey key) throws IOException {
+    private void handleIncomingBytes(SelectionKey key) throws IOException {
         ClientConnection clientConnection = returnClientConnection(key);
         SocketChannel channelClient;
 
@@ -128,10 +128,9 @@ public class ServerInstance implements Runnable {
             disconnect(clientConnection, e.getMessage());
             clients.remove(clientConnection);
         }
-
-        //here starts the server request handler
-        if(clientConnection.isAuthenticated()){
-            //we want to handle requests only from authenticated users
+        /*//here starts the server request handler
+            if(clientConnection.isAuthenticated()){
+                //we want to handle requests only from authenticated users
             //TODO : continue from here
 
         }
@@ -139,12 +138,92 @@ public class ServerInstance implements Runnable {
             //here we handle unauthenticated users
             System.out.printf("Client says: %s\n", new String(buffer.array()));
             //TODO: Create an authentication protocol
+        }*/
+    }
+    private void handleOutcomingBytes(SelectionKey key) throws IOException {
+
+    }
+    private Runnable sendRequest(Requests request, ClientConnection connection) throws IOException {
+        switch (request){
+
+            case SERVER_AUTHENTICATE:
+                connection.getChannel().write(ByteBuffer.wrap("{\"requestType\":\"SERVER_AUTHENTICATE\"}".getBytes()));
+                break;
+            case SERVER_COMMAND_PING:
+                break;
+            case ADMIN_CREATE_USER_ACCOUNT:
+                break;
+            case ADMIN_DELETE_USER_ACCOUNT:
+                break;
+            case ADMIN_EDIT_USER_ACCOUNT:
+                break;
+            case ADMIN_GET_ACCOUNTS_INFO:
+                break;
+            case ADMIN_GET_LIST_OF_USERNAMES:
+                break;
         }
-
+        return null;
     }
-    private void sendRequests(SelectionKey key) throws IOException {
+    /*private Runnable handleRequest(Requests request, String requestContent){
+        switch (request){
 
-    }
+            case SERVER_AUTHENTICATE:
+                return () -> {
+
+                };
+            break;
+            case SERVER_COMMAND_PING:
+                return () -> {
+
+                };
+                break;
+            case ADMIN_CREATE_USER_ACCOUNT:
+                return () -> {
+
+                };
+                break;
+            case ADMIN_DELETE_USER_ACCOUNT:
+                return () -> {
+
+                };
+                break;
+            case ADMIN_EDIT_USER_ACCOUNT:
+                return () -> {
+
+                };
+                break;
+            case ADMIN_GET_ACCOUNTS_INFO:
+                return () -> {
+
+                };
+                break;
+            case ADMIN_GET_LIST_OF_USERNAMES:
+                return () -> {
+
+                };
+                break;
+            case USER_ADD_EVENT_DAY:
+                return () -> {
+
+                };
+                break;
+            case USER_EDIT_SELF_ACCOUNT:
+                return () -> {
+
+                };
+                break;
+            case USER_GET_ACCOUNT_INFO:
+                return () -> {
+
+                };
+                break;
+            case UNKNOWN:
+                return () -> {
+
+                };
+                break;
+        }
+    }*/
     private ClientConnection returnClientConnection(SelectionKey key){
 
         for(ClientConnection forConnection : clients){
@@ -158,22 +237,20 @@ public class ServerInstance implements Runnable {
         ConsoleLog.info("Client " + connection.getGuestName() +  " has disconnected. (" + reason + ")");
         connection.getChannel().close();
     }
-
     public List<ClientConnection> returnClientsList(){
         return this.clients;
     }
-
-    private static class ConfigValue {
+    private static class ConfigFile {
 
         private final String dataBasePath;
         private final int port;
 
-        public ConfigValue(String dataBasePath, int port) {
+        public ConfigFile(String dataBasePath, int port) {
             this.dataBasePath = dataBasePath;
             this.port = port;
         }
     }
-    private static ConfigValue readConfigFile(String filePath) {
+    private static ConfigFile readConfigFile(String filePath) {
         ObjectMapper configMapper = new ObjectMapper();
         JsonNode node = null;
         try {
@@ -184,6 +261,6 @@ public class ServerInstance implements Runnable {
             ConsoleLog.fatalError(e.getMessage());
         }
 
-        return new ConfigValue(node.get("external").textValue(), node.get("port").asInt());
+        return new ConfigFile(node.get("external").textValue(), node.get("port").asInt());
     }
 }

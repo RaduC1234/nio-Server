@@ -3,19 +3,19 @@ package team.JavaTeens.Account;
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 
-public class Employee {
+public class Account {
 
     private final boolean admin;
     private final String firstName;
     private final String lastName;
     private final String[] middleName;
     private final Auth authentication;
-    private final EventDay dateEmployed;
-    private final ArrayList<EventDay> workFromHomeDays;
-    private final ArrayList<EventDay> absentDays;
+    private final CalendarEvent dateEmployed;
+    private final ArrayList<CalendarEvent> workFromHomeDays;
+    private final ArrayList<CalendarEvent> absentDays;
 
     @ConstructorProperties({"admin", "firstName", "lastName" , "middleName", "auth", "employed", "workFromHomeDays" , "absentDays"})
-    public Employee(boolean admin, String firstName, String lastName, String[] middleName, Auth authentication, EventDay dateEmployed, ArrayList<EventDay> workFromHomeDays, ArrayList<EventDay> absentDays) {
+    public Account(boolean admin, String firstName, String lastName, String[] middleName, Auth authentication, CalendarEvent dateEmployed, ArrayList<CalendarEvent> workFromHomeDays, ArrayList<CalendarEvent> absentDays) {
 
         this.admin = admin;
         this.firstName = firstName;
@@ -42,13 +42,13 @@ public class Employee {
     public Auth getAuthentication() {
         return authentication;
     }
-    public EventDay getDateEmployed() {
+    public CalendarEvent getDateEmployed() {
         return dateEmployed;
     }
-    public ArrayList<EventDay> getWorkFromHomeDays() {
+    public ArrayList<CalendarEvent> getWorkFromHomeDays() {
         return workFromHomeDays;
     }
-    public ArrayList<EventDay> getAbsentDays() {
+    public ArrayList<CalendarEvent> getAbsentDays() {
         return absentDays;
     }
 

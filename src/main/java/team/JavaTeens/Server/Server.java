@@ -5,7 +5,7 @@ import java.io.IOException;
 public class Server {
 
     //server
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         ServerInstance thisServer = new ServerInstance();
 
