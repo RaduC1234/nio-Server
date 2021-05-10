@@ -127,16 +127,18 @@ public class ServerInstance implements Runnable {
 
         try {
             channelClient.read(buffer);
+            synchronized (this.message){
+                this.message.setMessage(buffer);
+                this.message.setClient(clientConnection);
+                this.message.setHasContent(true);
+            }
         }
         catch (SocketException e){
             // here we handle client disconnection
             disconnect(clientConnection, e.getMessage());
             clients.remove(clientConnection);
         }
-        synchronized (this.message){
-            this.message.setMessage(buffer);
-            this.message.setHasContent(true);
-        }
+
     }
     private void handleOutcomingBytes(SelectionKey key) throws IOException {
 

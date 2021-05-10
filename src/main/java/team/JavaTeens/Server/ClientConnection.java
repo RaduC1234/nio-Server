@@ -3,7 +3,7 @@ package team.JavaTeens.Server;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
-public class ClientConnection {
+public class ClientConnection{
 
     private boolean isAuthenticated;
     private final SocketChannel channel;
@@ -34,4 +34,5 @@ public class ClientConnection {
     public synchronized void setGuestName(String guestName) {
         this.guestName = guestName;
     }
+
 }

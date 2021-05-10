@@ -44,32 +44,27 @@ public class RequestHandler {
                     this.service.execute(newReq);
                     break;
                 }
-            ClientMessage requestMessage;
-            synchronized (this.message) {
-                requestMessage = new ClientMessage(this.message);
-                this.message.setHasContent(false);
-            }
-            if (!requestMessage.hasContent())
-                continue;
-            System.out.printf("Client says: %s\n", new String(this.message.getMessage().array()));
-            //this causes spaghetti code but i don't have time for a better implementation
-            synchronized (existingRequests) {
+                ClientMessage requestMessage;
+                synchronized (this.message) {
+                    requestMessage = new ClientMessage(this.message);
+                    this.message.setHasContent(false);
+                }
+                if (!requestMessage.hasContent())
+                    continue;
+                //this causes spaghetti code but i don't have time for a better implementation
+                synchronized (existingRequests) {
 
-                //try{
-                for (Request existReq : existingRequests) {
-                    if (requestMessage.getClient().equals(existReq.getClient())) {
-                        synchronized (existReq) {
+                    for (Request existReq : existingRequests) {
+                        if (requestMessage.getClient().equals(existReq.getClient())) {
+                            synchronized (existReq) {
+
+                                existReq.setMessage(requestMessage.getMessage());
+                                existReq.notifyAll();
+                            }
+                            break;
                         }
-                            existReq.setMessage(requestMessage.getMessage());
-                            existReq.getClient().notify();
-                        }
-                        break;
                     }
                 }
-                //}
-                //catch (NullPointerException e){
-//
-                //}
             }
         }
     }

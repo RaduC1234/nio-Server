@@ -38,6 +38,7 @@ public class ClientMessage implements Cloneable{
         this.message = message;
         return this;
     }
+
     public boolean hasContent() {
         return hasContent;
     }

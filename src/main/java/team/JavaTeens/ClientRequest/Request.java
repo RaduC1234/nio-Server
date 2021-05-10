@@ -8,7 +8,7 @@ import team.JavaTeens.Server.ClientConnection;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class Request implements Runnable{
+public class Request implements Runnable {
 
     private final RequestType requestType;
     private final ClientConnection client;
@@ -28,7 +28,7 @@ public class Request implements Runnable{
     }
 
     public void setMessage(ByteBuffer message) {
-        this.message = message
+        this.message = message;
     }
 
     public ByteBuffer getMessage() {
