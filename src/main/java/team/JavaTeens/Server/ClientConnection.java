@@ -23,7 +23,7 @@ public class ClientConnection {
         return channel;
     }
 
-    public void setAuthenticated(boolean authenticated) {
+    public synchronized void setAuthenticated(boolean authenticated) {
         isAuthenticated = authenticated;
     }
 
@@ -31,7 +31,7 @@ public class ClientConnection {
         return guestName;
     }
 
-    public void setGuestName(String guestName) {
+    public synchronized void setGuestName(String guestName) {
         this.guestName = guestName;
     }
 }
