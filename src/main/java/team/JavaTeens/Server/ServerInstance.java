@@ -3,7 +3,8 @@ package team.JavaTeens.Server;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import team.JavaTeens.ClientRequest.ClientMessage;
-import team.JavaTeens.ClientRequest.Requests;
+import team.JavaTeens.ClientRequest.RequestHandler;
+import team.JavaTeens.ClientRequest.RequestType;
 import team.JavaTeens.ServerCommand.CommandHandler;
 import team.JavaTeens.ServerCommand.HelpCommand;
 import team.JavaTeens.ServerCommand.SayCommand;
@@ -21,7 +22,6 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.*;
 
 public class ServerInstance implements Runnable {
 
@@ -29,9 +29,8 @@ public class ServerInstance implements Runnable {
     private ServerSocketChannel ssc;
     private Selector selector;
     private List<ClientConnection> clients; // a list of all clients connected
-    private ExecutorService executors;
-    private CommandHandler handler;
-    private CyclicBarrier barrier = new CyclicBarrier(1);
+    private CommandHandler commandHandler;
+    private RequestHandler requestHandler;
     private ByteBuffer buffer;
     private ClientMessage message = new ClientMessage();
 
@@ -40,7 +39,6 @@ public class ServerInstance implements Runnable {
         try {
 
             this.config = readConfigFile("Config.json");
-            this.executors = Executors.newFixedThreadPool(3);
 
             //start
             this.ssc = ServerSocketChannel.open();
@@ -51,10 +49,13 @@ public class ServerInstance implements Runnable {
             this.ssc.register(selector, SelectionKey.OP_ACCEPT);
 
             //register new commands here
-            this.handler = new CommandHandler()
+            this.commandHandler = new CommandHandler()
                     .addCommand(new HelpCommand())
                     .addCommand(new SayCommand(this))
                     .listen();
+
+            this.requestHandler = new RequestHandler(this.message,5);
+
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,7 +97,7 @@ public class ServerInstance implements Runnable {
             ConsoleLog.info("New Connection from " + channelClient.getGuestName());
             clients.add(channelClient);
 
-            sendRequest(Requests.SERVER_AUTHENTICATE,channelClient);
+            requestHandler.sendRequest(RequestType.SERVER_AUTHENTICATE,channelClient);
 
         }  //here we handle client requests
         else if (key.isReadable()) {
@@ -121,7 +122,7 @@ public class ServerInstance implements Runnable {
             ConsoleLog.info("Channel terminated by client");
         }
 
-        buffer = ByteBuffer.allocate(80);
+        buffer = ByteBuffer.allocate(256);
         buffer.clear();
 
         try {
@@ -132,117 +133,13 @@ public class ServerInstance implements Runnable {
             disconnect(clientConnection, e.getMessage());
             clients.remove(clientConnection);
         }
-        System.out.printf("Client says: %s\n", new String(buffer.array()));
-        this.message.setClient(clientConnection);
-        this.message.setMessage(buffer);
+        synchronized (this.message){
+            this.message.setMessage(buffer);
+            this.message.setHasContent(true);
+        }
     }
     private void handleOutcomingBytes(SelectionKey key) throws IOException {
 
-    }
-    private void sendRequest(Requests request, ClientConnection connection){
-        switch (request){
-
-            case SERVER_AUTHENTICATE:
-                this.executors.execute(() -> {
-                    try {
-                        connection.getChannel().write(ByteBuffer.wrap("{\"requestType\":\"SERVER_AUTHENTICATE\"}".getBytes()));
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-
-                break;
-            case SERVER_COMMAND_PING:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_CREATE_USER_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_DELETE_USER_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_EDIT_USER_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_GET_ACCOUNTS_INFO:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_GET_LIST_OF_USERNAMES:
-                this.executors.execute(() -> {
-
-                });
-                break;
-        }
-    }
-    private void handleRequest(Requests request, String requestContent){
-        switch (request){
-
-            case SERVER_AUTHENTICATE:
-                this.executors.execute(() -> {
-
-                });
-            break;
-            case SERVER_COMMAND_PING:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_CREATE_USER_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_DELETE_USER_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_EDIT_USER_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_GET_ACCOUNTS_INFO:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case ADMIN_GET_LIST_OF_USERNAMES:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case USER_ADD_EVENT_DAY:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case USER_EDIT_SELF_ACCOUNT:
-                this.executors.execute(() -> {
-
-                });;
-            case USER_GET_ACCOUNT_INFO:
-                this.executors.execute(() -> {
-
-                });
-                break;
-            case UNKNOWN:
-                this.executors.execute(() -> {
-
-                });
-                break;
-        }
     }
     private ClientConnection returnClientConnection(SelectionKey key){
 

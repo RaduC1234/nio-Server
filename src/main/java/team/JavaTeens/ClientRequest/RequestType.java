@@ -1,6 +1,6 @@
 package team.JavaTeens.ClientRequest;
 
-public enum Requests {
+public enum RequestType {
 
     SERVER_AUTHENTICATE,
     SERVER_COMMAND_PING,
