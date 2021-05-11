@@ -30,7 +30,7 @@ public class ServerInstance implements Runnable {
     private Selector selector;
     private List<ClientConnection> clients; // a list of all clients connected
     private CommandHandler commandHandler;
-    private RequestHandler requestHandler;
+    public static RequestHandler requestHandler;
     private ByteBuffer buffer;
     private ClientMessage message = new ClientMessage();
 
@@ -135,7 +135,7 @@ public class ServerInstance implements Runnable {
         }
         catch (SocketException e){
             // here we handle client disconnection
-            disconnect(clientConnection, e.getMessage());
+            clientConnection.disconnect(e.getMessage());
             clients.remove(clientConnection);
         }
 
@@ -152,10 +152,7 @@ public class ServerInstance implements Runnable {
         }
         return null;
     }
-    private void disconnect(ClientConnection connection, String reason) throws IOException{
-        ConsoleLog.info("Client " + connection.getGuestName() +  " has disconnected. (" + reason + ")");
-        connection.getChannel().close();
-    }
+
     public List<ClientConnection> returnClientsList(){
         return this.clients;
     }
