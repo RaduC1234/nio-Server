@@ -1,5 +1,7 @@
 package team.JavaTeens.ServerCommand;
 
+import team.JavaTeens.Utils.ConsoleLog;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,11 +35,18 @@ public class CommandHandler {
                 try {
                     consoleLine = ConsoleInput.readLine();
 
+                    boolean commandFound = false;
+
                     for (Command command : commands) {
                         if (consoleLine.startsWith(command.name)) {
+                            commandFound = true;
                             command.arguments = consoleLine.replace(command.name , "");
                             command.execute();
                         }
+                    }
+
+                    if(!commandFound) {
+                        ConsoleLog.warn("Unknown command, run help for a full list of commands");
                     }
 
                 } catch (IOException e) {

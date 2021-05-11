@@ -1,18 +1,20 @@
 package team.JavaTeens.Account;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 
 public class Account {
 
-    private final boolean admin;
-    private final String firstName;
-    private final String lastName;
-    private final String[] middleName;
-    private final Auth authentication;
-    private final CalendarEvent dateEmployed;
-    private final ArrayList<CalendarEvent> workFromHomeDays;
-    private final ArrayList<CalendarEvent> absentDays;
+    private boolean admin = false;
+    private String firstName = null;
+    private String lastName = null;
+    private String[] middleName = null;
+    private Auth authentication = null;
+    private CalendarEvent dateEmployed = null;
+    private ArrayList<CalendarEvent> workFromHomeDays = null;
+    private ArrayList<CalendarEvent> absentDays = null;
 
     @ConstructorProperties({"admin", "firstName", "lastName" , "middleName", "auth", "employed", "workFromHomeDays" , "absentDays"})
     public Account(boolean admin, String firstName, String lastName, String[] middleName, Auth authentication, CalendarEvent dateEmployed, ArrayList<CalendarEvent> workFromHomeDays, ArrayList<CalendarEvent> absentDays) {
@@ -25,6 +27,10 @@ public class Account {
         this.dateEmployed = dateEmployed;
         this.workFromHomeDays = workFromHomeDays;
         this.absentDays = absentDays;
+    }
+
+    public Account() {
+
     }
 
     public boolean isAdmin() {
@@ -52,7 +58,38 @@ public class Account {
         return absentDays;
     }
 
-
+    public Account setAdmin(boolean admin) {
+        this.admin = admin;
+        return this;
+    }
+    public Account setFirstName(String firstName) {
+        this.firstName = firstName;
+        return this;
+    }
+    public Account setLastName(String lastName) {
+        this.lastName = lastName;
+        return this;
+    }
+    public Account setMiddleName(String[] middleName) {
+        this.middleName = middleName;
+        return this;
+    }
+    public Account setAuthentication(Auth authentication) {
+        this.authentication = authentication;
+        return this;
+    }
+    public Account setDateEmployed(CalendarEvent dateEmployed) {
+        this.dateEmployed = dateEmployed;
+        return this;
+    }
+    public Account setWorkFromHomeDays(ArrayList<CalendarEvent> workFromHomeDays) {
+        this.workFromHomeDays = workFromHomeDays;
+        return this;
+    }
+    public Account setAbsentDays(ArrayList<CalendarEvent> absentDays) {
+        this.absentDays = absentDays;
+        return this;
+    }
     public static class Auth {
 
         private final String userName;

@@ -10,6 +10,7 @@ public class HelpCommand extends Command {
 
     @Override
     protected void execute() {
+        //TODO: make a help command
         ConsoleLog.info("help me");
     }
 }

@@ -20,9 +20,10 @@ public class CalendarEventSerializer extends StdSerializer<CalendarEvent>{
     @Override
     public void serialize(CalendarEvent calendarEvent, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeNumber(calendarEvent.getDate().getYear());
-        jsonGenerator.writeNumber(calendarEvent.getDate().getMonthValue());
-        jsonGenerator.writeNumber(calendarEvent.getDate().getDayOfMonth());
+        jsonGenerator.writeNumberField("year",calendarEvent.getDate().getYear());
+        jsonGenerator.writeNumberField("mouth",calendarEvent.getDate().getMonthValue());
+        jsonGenerator.writeNumberField("day",calendarEvent.getDate().getDayOfMonth());
+        jsonGenerator.writeStringField("description",calendarEvent.getDescription());
         jsonGenerator.writeEndObject();
     }
 }

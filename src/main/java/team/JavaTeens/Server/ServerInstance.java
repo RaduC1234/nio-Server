@@ -8,6 +8,7 @@ import team.JavaTeens.ClientRequest.RequestType;
 import team.JavaTeens.ServerCommand.CommandHandler;
 import team.JavaTeens.ServerCommand.HelpCommand;
 import team.JavaTeens.ServerCommand.SayCommand;
+import team.JavaTeens.ServerCommand.UserCommand;
 import team.JavaTeens.Utils.ConsoleLog;
 
 import java.io.File;
@@ -25,7 +26,7 @@ import java.util.List;
 
 public class ServerInstance implements Runnable {
 
-    private ConfigFile config;
+    public static ConfigFile config;
     private ServerSocketChannel ssc;
     private Selector selector;
     private List<ClientConnection> clients; // a list of all clients connected
@@ -52,6 +53,7 @@ public class ServerInstance implements Runnable {
             this.commandHandler = new CommandHandler()
                     .addCommand(new HelpCommand())
                     .addCommand(new SayCommand(this))
+                    .addCommand(new UserCommand(new File(this.config.dataBasePath)))
                     .listen();
 
             this.requestHandler = new RequestHandler(this.message,5);
@@ -156,7 +158,8 @@ public class ServerInstance implements Runnable {
     public List<ClientConnection> returnClientsList(){
         return this.clients;
     }
-    private static class ConfigFile {
+
+    public static class ConfigFile {
 
         private final String dataBasePath;
         private final int port;
@@ -165,8 +168,13 @@ public class ServerInstance implements Runnable {
             this.dataBasePath = dataBasePath;
             this.port = port;
         }
+
+        public String getDataBasePath() {
+            return dataBasePath;
+        }
     }
     private static ConfigFile readConfigFile(String filePath) {
+        ConsoleLog.info("Loading Properties...");
         ObjectMapper configMapper = new ObjectMapper();
         JsonNode node = null;
         try {

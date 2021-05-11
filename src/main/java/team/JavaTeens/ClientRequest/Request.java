@@ -7,9 +7,14 @@ import team.JavaTeens.Account.Account;
 import team.JavaTeens.Server.ClientConnection;
 import team.JavaTeens.Server.ServerInstance;
 import team.JavaTeens.Utils.ConsoleLog;
+import team.JavaTeens.Utils.FileUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.LocalDate;
 
 public class Request implements Runnable {
 
@@ -45,23 +50,7 @@ public class Request implements Runnable {
             switch (requestType) {
 
                 case SERVER_AUTHENTICATE:
-                    getClient().getChannel().write(ByteBuffer.wrap("{\"requestType\":\"SERVER_AUTHENTICATE\"}".getBytes()));
-                    synchronized (this) {
-                        this.wait();
-                    }
-                    ByteBuffer message = this.message;
-                    ObjectMapper mapper = new ObjectMapper();
-                    JsonNode jsonNode;
-                    try {
-                        jsonNode = mapper.readTree(message.array());
-                    } catch (JsonParseException exception) {
-                        this.client.disconnect("Invalid Request");
-                        return;
-                    }
-                    JsonNode auth = jsonNode.get("SERVER_AUTHENTICATE");
-                    Account.Auth authentication = new Account.Auth(auth.get("username").asText(), auth.get("password").asText());
-                    System.out.println(authentication.getUserName() + " " + authentication.getPassword());
-
+                    authenticate();
                     break;
                 case SERVER_COMMAND_PING:
                     ConsoleLog.info("Ping!");
@@ -128,5 +117,40 @@ public class Request implements Runnable {
         finally {
             ServerInstance.requestHandler.existingRequests.remove(this);
         }
+    }
+    private void authenticate() throws IOException, InterruptedException {
+        getClient().getChannel().write(ByteBuffer.wrap("{\"requestType\":\"SERVER_AUTHENTICATE\"}".getBytes()));
+        synchronized (this) {
+            this.wait();
+        }
+        ByteBuffer message = this.message;
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode;
+        try {
+            jsonNode = mapper.readTree(message.array());
+        } catch (JsonParseException exception) {
+            this.client.disconnect("Invalid Request");
+            return;
+        }
+        JsonNode auth = jsonNode.get("SERVER_AUTHENTICATE");
+
+        try {
+            File file = FileUtils.findFile( auth.get("username").asText() + ".json", new File(ServerInstance.config.getDataBasePath()));
+            Account account = (Account) FileUtils.parseJson(FileUtils.readFile(file.getAbsolutePath()),Account.class);
+
+            if(!account.getAuthentication().getPassword().equalsIgnoreCase(auth.get("password").asText())){
+                this.client.getChannel().write(ByteBuffer.wrap("{\"responseMessage\":\"Invalid credentials\"}".getBytes()));
+                authenticate();
+                return;
+            }
+            this.client.setAuthenticated(true);
+            ConsoleLog.info("Client: " + this.client.getGuestName() + " successfully authenticated as " + account.getAuthentication().getUserName() + ".");
+            this.client.getChannel().write(ByteBuffer.wrap("{\"responseMessage\":\"Access Granted\"}".getBytes()));
+        }
+        catch (FileNotFoundException e){
+            authenticate();
+            this.client.getChannel().write(ByteBuffer.wrap("{\"responseMessage\":\"Invalid credentials\"}".getBytes()));
+        }
+
     }
 }
