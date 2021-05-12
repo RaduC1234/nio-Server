@@ -1,12 +1,15 @@
 package team.JavaTeens.ClientRequest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import team.JavaTeens.Server.ClientConnection;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -71,7 +74,9 @@ public class RequestHandler {
 
                 try {
                     handleRequest(requestMessage);
+
                 } catch (IOException e) {
+                    System.out.println("error");
                     this.message.getClient().disconnect(e.getMessage());
                 }
             }
@@ -87,9 +92,10 @@ public class RequestHandler {
         }
     }
 
-    private static RequestType getRequestType(ByteBuffer message) throws IllegalArgumentException, IOException {
+    private static RequestType getRequestType(ByteBuffer message) throws JsonProcessingException {
 
-        JsonNode node = new ObjectMapper().readTree(message.array());
+        System.out.println(new String(message.array(), StandardCharsets.UTF_8));
+        JsonNode node = new ObjectMapper().readTree(new String(message.array(), StandardCharsets.UTF_8));
         String type = node.get("requestType").asText();
 
         switch (type){
@@ -113,7 +119,9 @@ public class RequestHandler {
                 return RequestType.USER_ADD_EVENT_DAY;
             case "USER_EDIT_SELF_ACCOUNT":
                 return RequestType.USER_EDIT_SELF_ACCOUNT;
-            default: throw new IllegalArgumentException("Unknown Request Type");
+            case "USER_LOG_OFF":
+                return RequestType.USER_LOG_OFF;
+            default: return RequestType.UNKNOWN;
         }
     }
 }

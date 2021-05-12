@@ -28,6 +28,19 @@ public class UserCommand extends Command {
     @Override
     protected void execute() {
         String[] args = this.arguments.split(" ");
+        String[] windowsIllegalCharacters = new String[] { //DO NOT DELETE THIS CHECK, IT CAN BLUESCREEN ANY OLDER WINDOWS MACHINE.
+                "<", ">", ":", "/", "\\", "|", "?", "*",
+                "CON", "PRN", "AUX", "NUL",
+                "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "user"};
+
+        for(String illegal :windowsIllegalCharacters){
+            if(arguments.contains(illegal)){
+                ConsoleLog.warn("The username cannot contain the following character or name: " + illegal);
+                return;
+            }
+        }
+
         File file = new File(dataBase + "\\" + args[2] + ".json");
 
         switch (args[1]) { //TODO: add user info
@@ -64,6 +77,8 @@ public class UserCommand extends Command {
                         "Middle name: " + Arrays.toString(account.getMiddleName()));
                 break;
             case "delete":
+
+
                 if(!file.exists()){
                     ConsoleLog.warn("The user does not exist");
                     return;
