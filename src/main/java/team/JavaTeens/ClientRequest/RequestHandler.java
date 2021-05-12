@@ -86,6 +86,9 @@ public class RequestHandler {
     public void handleRequest(ClientMessage message) throws IllegalArgumentException, IOException {
 
         Request request = new Request(getRequestType(message.getMessage()), message.getClient());
+        synchronized (this.message){
+            request.setMessage(this.message.getMessage());
+        }
         synchronized (this.newRequests){
             this.existingRequests.add(request);
             this.service.execute(request);
