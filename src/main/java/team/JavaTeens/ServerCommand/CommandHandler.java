@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 
 public class CommandHandler {
 
-    static ExecutorService service = Executors.newSingleThreadExecutor();
+    private ExecutorService service = Executors.newSingleThreadExecutor();
     private List<Command> commands;
 
     public CommandHandler() {
@@ -44,6 +44,14 @@ public class CommandHandler {
                             command.execute();
                         }
                     }
+                    if(consoleLine.startsWith("help")){
+                        StringBuilder help = new StringBuilder();
+                        for(Command command : commands){
+                            help.append(command.name).append(" -> ").append(command.help).append("\n");
+                        }
+                        ConsoleLog.info("Here are the syntax's of all commands:\n" + help);
+                        continue;
+                    }
 
                     if(!commandFound) {
                         ConsoleLog.warn("Unknown command, run help for a full list of commands");
@@ -58,6 +66,9 @@ public class CommandHandler {
     }
     public void terminate(){
         service.shutdownNow();
+    }
+    private void executeHelp(){
+
     }
 
     private static class ConsoleInput {

@@ -6,6 +6,7 @@ import team.JavaTeens.Utils.ConsoleLog;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class SayCommand extends Command {
@@ -40,7 +41,7 @@ public class SayCommand extends Command {
         for(ClientConnection clientConnection : clients){
             try {
                 //TODO: replace with a json format
-                clientConnection.getChannel().write(ByteBuffer.wrap(this.arguments.getBytes()));
+                clientConnection.getChannel().write(ByteBuffer.wrap(this.arguments.getBytes(StandardCharsets.UTF_8)));
                 ConsoleLog.info("Echo:" + this.arguments);
             } catch (IOException e) {
                 ConsoleLog.error("Cannot send the message. Reason: " + e.getMessage());

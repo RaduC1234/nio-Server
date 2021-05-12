@@ -12,5 +12,6 @@ public enum RequestType {
     USER_ADD_EVENT_DAY,
     USER_EDIT_SELF_ACCOUNT,
     USER_GET_ACCOUNT_INFO,
+    USER_LOG_OFF,
     UNKNOWN
 }

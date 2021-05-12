@@ -6,7 +6,6 @@ import team.JavaTeens.ClientRequest.ClientMessage;
 import team.JavaTeens.ClientRequest.RequestHandler;
 import team.JavaTeens.ClientRequest.RequestType;
 import team.JavaTeens.ServerCommand.CommandHandler;
-import team.JavaTeens.ServerCommand.HelpCommand;
 import team.JavaTeens.ServerCommand.SayCommand;
 import team.JavaTeens.ServerCommand.UserCommand;
 import team.JavaTeens.Utils.ConsoleLog;
@@ -51,7 +50,6 @@ public class ServerInstance implements Runnable {
 
             //register new commands here
             this.commandHandler = new CommandHandler()
-                    .addCommand(new HelpCommand())
                     .addCommand(new SayCommand(this))
                     .addCommand(new UserCommand(new File(this.config.dataBasePath)))
                     .listen();
@@ -124,7 +122,7 @@ public class ServerInstance implements Runnable {
             ConsoleLog.info("Channel terminated by client");
         }
 
-        buffer = ByteBuffer.allocate(256);
+        buffer = ByteBuffer.allocate(1024);
         buffer.clear();
 
         try {
