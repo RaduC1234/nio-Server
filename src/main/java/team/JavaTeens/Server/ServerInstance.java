@@ -15,17 +15,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class ServerInstance implements Runnable {
 
-    public static ConfigFile config;
+    public ConfigFile config;
     private ServerSocketChannel ssc;
     private Selector selector;
     private List<ClientConnection> clients; // a list of all clients connected
@@ -54,7 +51,7 @@ public class ServerInstance implements Runnable {
                     .addCommand(new UserCommand(new File(this.config.dataBasePath)))
                     .listen();
 
-            this.requestHandler = new RequestHandler(this.message,5);
+            this.requestHandler = new RequestHandler(this.config.dataBasePath,this.message,5);
 
 
         } catch (IOException e) {
@@ -70,6 +67,11 @@ public class ServerInstance implements Runnable {
 
         Iterator<SelectionKey> it;
         while (ssc.isOpen()) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             try {
                 if (selector.select() != 0) {
                     it = selector.selectedKeys().iterator();
@@ -122,7 +124,7 @@ public class ServerInstance implements Runnable {
             ConsoleLog.info("Channel terminated by client");
         }
 
-        buffer = ByteBuffer.allocate(1024);
+        buffer = ByteBuffer.allocate(512);
         buffer.clear();
 
         try {
@@ -133,7 +135,7 @@ public class ServerInstance implements Runnable {
                 this.message.setHasContent(true);
             }
         }
-        catch (SocketException e){
+        catch (SocketException | ClosedChannelException e){
             // here we handle client disconnection
             clientConnection.disconnect(e.getMessage());
             clients.remove(clientConnection);

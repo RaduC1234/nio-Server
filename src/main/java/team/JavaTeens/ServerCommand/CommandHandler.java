@@ -60,15 +60,17 @@ public class CommandHandler {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
         return null;
     }
     public void terminate(){
         service.shutdownNow();
-    }
-    private void executeHelp(){
-
     }
 
     private static class ConsoleInput {

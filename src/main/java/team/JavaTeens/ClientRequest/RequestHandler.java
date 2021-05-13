@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import team.JavaTeens.Server.ClientConnection;
+import team.JavaTeens.Utils.ConsoleLog;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,11 +17,13 @@ import java.util.concurrent.Executors;
 public class RequestHandler {
 
     private final ExecutorService service;
-    public List<Request> existingRequests;
+    private final String dataBasePath;
+    public  List<Request> existingRequests;
     private List<Request> newRequests;
     private ClientMessage message;
 
-    public RequestHandler(ClientMessage message, int threadPool) {
+    public RequestHandler(String dataBasePath, ClientMessage message, int threadPool) {
+        this.dataBasePath = dataBasePath;
         this.message = message;
         this.existingRequests = new ArrayList<>();
         this.newRequests = new ArrayList<>();
@@ -34,7 +36,7 @@ public class RequestHandler {
 
     public void sendRequest(RequestType requestType, ClientConnection connection) {
         synchronized (this.existingRequests) {
-            this.newRequests.add(new Request(requestType, connection));
+            this.newRequests.add(new Request(requestType, connection, this.dataBasePath));
         }
     }
 
@@ -55,7 +57,7 @@ public class RequestHandler {
                 if (!requestMessage.hasContent())
                     continue;
 
-                //this causes spaghetti code but i don't have time for a better implementation
+                //this causes spaghetti code but i don't have time for a better implementation.
                 boolean existingRequest = false;
                 synchronized (this.existingRequests) {
                     for (Request existReq : existingRequests) {
@@ -69,14 +71,20 @@ public class RequestHandler {
                         }
                     }
                 }
-                if (existingRequest)
+                if (existingRequest) {
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     continue;
+                }
 
                 try {
                     handleRequest(requestMessage);
 
                 } catch (IOException e) {
-                    System.out.println("error");
+                    ConsoleLog.error(e.getMessage());
                     this.message.getClient().disconnect(e.getMessage());
                 }
             }
@@ -85,7 +93,7 @@ public class RequestHandler {
 
     public void handleRequest(ClientMessage message) throws IllegalArgumentException, IOException {
 
-        Request request = new Request(getRequestType(message.getMessage()), message.getClient());
+        Request request = new Request(getRequestType(message), message.getClient(),this.dataBasePath);
         synchronized (this.message){
             request.setMessage(this.message.getMessage());
         }
@@ -95,12 +103,19 @@ public class RequestHandler {
         }
     }
 
-    private static RequestType getRequestType(ByteBuffer message) throws JsonProcessingException {
+    private static RequestType getRequestType(ClientMessage clientMessage){
 
-        System.out.println(new String(message.array(), StandardCharsets.UTF_8));
-        JsonNode node = new ObjectMapper().readTree(new String(message.array(), StandardCharsets.UTF_8));
-        String type = node.get("requestType").asText();
+        JsonNode node; String type;
 
+        try {
+            node = new ObjectMapper().readTree(new String(clientMessage.getMessage().array(), StandardCharsets.UTF_8));
+            type = node.get("requestType").asText();
+        } catch (JsonProcessingException e) {
+            ConsoleLog.warn("Incoming unknown request coming from " + clientMessage.getClient().getGuestName());
+            return RequestType.UNKNOWN;
+        }
+
+        //this is a bad implementation but i'm already bored of this handler.
         switch (type){
             case "SERVER_AUTHENTICATE":
                 return RequestType.SERVER_AUTHENTICATE;
@@ -113,9 +128,9 @@ public class RequestHandler {
             case "ADMIN_EDIT_USER_ACCOUNT":
                 return RequestType.ADMIN_EDIT_USER_ACCOUNT;
             case "ADMIN_GET_ACCOUNTS_INFO":
-                return RequestType.ADMIN_GET_ACCOUNTS_INFO;
+                return RequestType.ADMIN_GET_ACCOUNT_INFO;
             case "USER_GET_ACCOUNT_INFO":
-                return RequestType.USER_GET_ACCOUNT_INFO;
+                return RequestType.USER_GET_SELF_ACCOUNT;
             case "ADMIN_GET_LIST_OF_USERNAMES":
                 return RequestType.ADMIN_GET_LIST_OF_USERNAMES;
             case "USER_ADD_EVENT_DAY":

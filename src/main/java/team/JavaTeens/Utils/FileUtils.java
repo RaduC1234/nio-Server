@@ -39,9 +39,7 @@ public class FileUtils {
         new ObjectMapper().writeValue(file, content);
     }
 
-    public static String readFile(String path)
-            throws IOException
-    {
+    public static String readFile(String path) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         return new String(encoded, StandardCharsets.UTF_8);
     }

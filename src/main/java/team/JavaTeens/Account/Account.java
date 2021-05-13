@@ -29,9 +29,7 @@ public class Account {
         this.absentDays = absentDays;
     }
 
-    public Account() {
-
-    }
+    public Account() {}
 
     public boolean isAdmin() {
         return admin;

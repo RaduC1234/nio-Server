@@ -1,0 +1,81 @@
+>case SERVER_AUTHENTICATE:
+
+{"requestType":"SERVER_AUTHENTICATE"} //server -> client
+
+{"responseType":"SERVER_AUTHENTICATE","SERVER_AUTHENTICATE":{"username":"username","password":"password"}}} //client -> server
+
+{"responseMessage":"Invalid credidentials", "responseStatus": false} //server -> error
+
+{"responseMessage":"Access Granted", "responseStatus": true } //server -> success
+
+>case SERVER_COMMAND_PING:
+
+{"requestType":"SERVER_COMMAND_PING"} // server/client -> server/client
+
+{"responseMessage":"Pong!", "responseStatus": true} // server/client -> server/client
+
+>case ADMIN_CREATE_USER_ACCOUNT:
+
+{"requestType":"ADMIN_CREATE_USER_ACCOUNT","ADMIN_CREATE_USER_ACCOUNT":{"admin": false,"firstName": "Vlad","lastName": "Dumitache","middleName": ["null"],"authentication": {"password": "1235","userName": "vlad44"}}} //client -> server
+
+{"responseMessage":"User already exists", "responseStatus": false}
+
+{"responseMessage":"Cannot write to file " + file.getAbsolutePath() + " " + IOExeption.getMessage()", "responseStatus": false}
+
+{"responseMessage":"User successfully created", "responseStatus": false}
+
+>case ADMIN_DELETE_USER_ACCOUNT:
+
+{"requestType":"ADMIN_DELETE_USER_ACCOUNT","ADMIN_DELETE_USER_ACCOUNT":{"username":"username"}}
+
+{"responseMessage":"The user does not exist", "responseStatus": false}
+
+{"responseMessage":"User successfully deleted", "responseStatus": true}
+
+{"responseMessage":"Cannot delete user", "responseStatus": false}
+
+{"responseMessage":"You are not an admin", "responseStatus": false}
+
+>case ADMIN_EDIT_USER_ACCOUNT:
+
+// NU incerca sa schimbi vreo data in acest request
+{"requestType":"ADMIN_DELETE_USER_ACCOUNT","ADMIN_DELETE_USER_ACCOUNT":{"admin": false,"firstName": "Vlad","lastName": "Dumitache","middleName": ["null"],"authentication": {"password": "1235","userName": "vlad44"}}}
+
+{"responseMessage":"User does not exist", "responseStatus": false}
+
+{"responseMessage":"Cannot write to file " + file.getAbsolutePath() + " " + IOExeption.getMessage()", "responseStatus": false}
+
+>case ADMIN_GET_ACCOUNT_INFO:
+
+{"requestType":"ADMIN_GET_ACCOUNT_INFO","ADMIN_DELETE_USER_ACCOUNT":{"username":"username"}}
+
+{"responseMessage":"The user does not exist", "responseStatus": false}
+
+>case ADMIN_GET_LIST_OF_USERNAMES:
+
+{"requestType":"ADMIN_GET_LIST_OF_USERNAMES"} // client -> server
+
+{"responseType":"ADMIN_GET_LIST_OF_USERNAMES","ADMIN_GET_LIST_OF_USERNAMES":{"#listStart":**number of users** }}} //server -> client
+
+{"requestType" : "ADMIN_GET_LIST_OF_USERNAMES", "#list : {"username" : "**username**}} // server -> client
+...
+
+{"responseType":"ADMIN_GET_LIST_OF_USERNAMES","ADMIN_GET_LIST_OF_USERNAMES":{"#listEnd": "#listEnd"}}} //server -> client
+
+>case USER_ADD_EVENT_DAY:
+
+{"requestType":"USER_ADD_EVENT_DAY","USER_ADD_EVENT_DAY": {"category": "workFromHomeDays/absentDays","year": 2021,"mouth": 5, "day": 2, "description" : "description"}}}" // client -> server
+
+{"responseMessage":"Success"} // server -> client
+
+{"responseMessage":"User not found"} // server -> client
+
+{"responseMessage":"Failure"} //server -> client
+
+>case USER_LOG_OFF:
+
+{"requestType":"USER_LOG_OFF"}, // client
+
+{"responseMessage":"Already Logged Off"} //server -> error
+
+("responseMessage":"Logged Off"} // server -> success

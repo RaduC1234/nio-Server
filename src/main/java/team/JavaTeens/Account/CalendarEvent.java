@@ -2,8 +2,8 @@ package team.JavaTeens.Account;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import team.JavaTeens.Serializer_Deserializer.CalendarEventDeserializer;
-import team.JavaTeens.Serializer_Deserializer.CalendarEventSerializer;
+import team.JavaTeens.Utils.CalendarEventDeserializer;
+import team.JavaTeens.Utils.CalendarEventSerializer;
 
 import java.time.LocalDate;
 
